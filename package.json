@@ -1,0 +1,19 @@
+{
+  "name": "trabalho-redes-de-computadores-ufjf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joaop-c-lima/trabalho-redes-de-computadores-ufjf.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joaop-c-lima/trabalho-redes-de-computadores-ufjf/issues"
+  },
+  "homepage": "https://github.com/joaop-c-lima/trabalho-redes-de-computadores-ufjf#readme"
+}
