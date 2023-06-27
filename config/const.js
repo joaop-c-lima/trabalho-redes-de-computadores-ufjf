@@ -8,5 +8,6 @@ module.exports = {
     timeout: 30000, // Tempo (ms) para fechar conexão
     timereset: 8000, // Tempo (ms) sem requisição para zerar variáveis,
     maxRetransmissions: 3, // Maximo de restransmissões,
-    packetTimeout: 2000 // Tempo (ms) de retransmissão
+    packetTimeout: 2000, // Tempo (ms) de retransmissão,
+    windowSize: 3 // Tamanho da Janela
 }

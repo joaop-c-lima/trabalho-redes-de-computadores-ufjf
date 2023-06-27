@@ -1,9 +1,16 @@
-const { hostname, port, client, maxRetransmissions, packetTimeout } = require('./config/const')
+const { hostname, port, client, maxRetransmissions, packetTimeout, windowSize } = require('./config/const')
+
+
+let windowStart = 0;
+let windowEnd = windowSize - 1;
 
 const packets = [
     { id: 0, data: 'Olá, servidor!' },
     { id: 1, data: 'Como você está?' },
-    { id: 2, data: 'Aqui está o meu terceiro pacote.' }
+    { id: 2, data: 'Aqui está o meu terceiro pacote.' },
+    { id: 3, data: 'Aqui está o meu QUARTO pacote.' },
+    { id: 4, data: 'Aqui está o meu  QUINTO pacote.' },
+    { id: 5, data: 'Aqui está o meu SEXTO  pacote.' }
 ];
 
 /* Funções: Auxiliares */
@@ -15,6 +22,7 @@ function send(message) {
     });
 }
 
+// Função para retransmitir o pacote em caso de falha na entrega
 function generatePacketTimer(packet) {
     return setTimeout(() => {
         if (packet.transmissions < maxRetransmissions) {
@@ -39,11 +47,16 @@ function sendPacket(packet) {
 }
 
 function startTransmission() {
-    packets.forEach((packet) => {
-        packet.transmissions = 0; // Número de retransmissões para o pacote
-        packet.timer = generatePacketTimer(packet);
-        sendPacket(packet);
-    });
+
+    //Janela Deslizante
+    for (let i = 0; i <= windowEnd; i++) {
+        if (i < packets.length) {
+            const packet = packets[i];
+            packet.transmissions = 0; // Número de retransmissões para o pacote
+            packet.timer = generatePacketTimer(packet);
+            sendPacket(packet);
+        }
+    }
 }
 
 /* Eventos */
@@ -53,10 +66,26 @@ client.on('message', (message) => {
     console.log('ACK recebido: ', ackPacket);
 
     const index = packets.findIndex((packet) => packet.id === ackPacket.ack);
-    if (index !== -1) {
+    if (index !== -1 && index >= windowStart && index <= windowEnd) {
         const packet = packets[index];
         clearTimeout(packet.timer);
+
+        if (windowStart === index) {
+            // Desliza a janela para a direita
+            windowStart++;
+            windowEnd++;
+
+            if (windowEnd < packets.length) {
+                const nextPacket = packets[windowEnd];
+                nextPacket.transmissions = 0; // Número de retransmissões para o pacote
+                nextPacket.timer = generatePacketTimer(nextPacket);
+                sendPacket(nextPacket);
+            }
+        }
     }
+
+
+
 });
 
 /* Uso */

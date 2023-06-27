@@ -2,6 +2,7 @@ const { port, server, timeout, timereset } = require('./config/const')
 
 let expectedSeqNumber = 0;
 let timer;
+const receivedPackets = new Map(); // Mapa para armazenar pacotes recebidos
 
 /* Funções Auxiliares */
 
@@ -32,7 +33,21 @@ server.on('message', (message, rinfo) => {
         console.log('Pacote recebido: ', packet);
         // Processar o pacote recebido
 
-        expectedSeqNumber++;
+        // Armazenar o pacote recebido no mapa
+        receivedPackets.set(packet.id, packet);
+
+        // Verificar se há pacotes subsequentes na sequência
+        let nextSeqNumber = expectedSeqNumber + 1;
+        while (receivedPackets.has(nextSeqNumber)) {
+            const nextPacket = receivedPackets.get(nextSeqNumber);
+            console.log('Pacote recebido: ', nextPacket);
+            // Processar o pacote recebido
+
+            receivedPackets.delete(nextSeqNumber);
+            nextSeqNumber++;
+        }
+
+        expectedSeqNumber = nextSeqNumber;
     } else {
         console.log('Pacote fora de ordem. Descartado.');
     }
