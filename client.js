@@ -3,6 +3,7 @@ const { hostname, port, client, maxRetransmissions, packetTimeout, windowSize } 
 
 let windowStart = 0;
 let windowEnd = windowSize - 1;
+let receiverWindowSize = windowSize; // Tamanho da janela do destinatário
 
 const packets = [
     { id: 0, data: 'Olá, servidor!' },
@@ -25,14 +26,14 @@ function send(message) {
 // Função para retransmitir o pacote em caso de falha na entrega
 function generatePacketTimer(packet) {
     return setTimeout(() => {
-        if (packet.transmissions < maxRetransmissions) {
+        if (packet.transmissions < maxRetransmissions && !packet.ackReceived) {
             packet.transmissions++;
             console.log(`Timeout. Reenviando pacote: ${packet.data}`);
             sendPacket(packet);
-        } else {
+        } else if (!packet.ackReceived) {
             console.log(`Limite de retransmissões atingido para o pacote: ${packet.data}`);
         }
-    }, packetTimeout);;
+    }, packetTimeout);
 }
 
 /* Funções: Principais */
@@ -49,10 +50,11 @@ function sendPacket(packet) {
 function startTransmission() {
 
     //Janela Deslizante
-    for (let i = 0; i <= windowEnd; i++) {
+    for (let i = windowStart; i <= windowEnd; i++) {
         if (i < packets.length) {
             const packet = packets[i];
-            packet.transmissions = 0; // Número de retransmissões para o pacote
+            packet.transmissions = 0;
+            packet.ackReceived = false; // Indicador se o pacote recebeu ACK
             packet.timer = generatePacketTimer(packet);
             sendPacket(packet);
         }
@@ -69,6 +71,7 @@ client.on('message', (message) => {
     if (index !== -1 && index >= windowStart && index <= windowEnd) {
         const packet = packets[index];
         clearTimeout(packet.timer);
+        packet.ackReceived = true;
 
         if (windowStart === index) {
             // Desliza a janela para a direita
@@ -78,11 +81,26 @@ client.on('message', (message) => {
             if (windowEnd < packets.length) {
                 const nextPacket = packets[windowEnd];
                 nextPacket.transmissions = 0; // Número de retransmissões para o pacote
+                nextPacket.ackReceived = false; // Indicador se o pacote recebeu ACK
                 nextPacket.timer = generatePacketTimer(nextPacket);
                 sendPacket(nextPacket);
             }
+            else if (windowStart >= packets.length) {
+                console.log('Todos os pacotes foram entregues. Encerrando a transmissão.');
+                client.close();
+            }
         }
     }
+
+    /* if (windowStart === packets.length) {
+        console.log('Todos os pacotes foram entregues corretamente. Encerrando a transmissão.');
+        client.close();
+    } */
+
+    /*receiverWindowSize = ackPacket.windowSize; // Atualiza o tamanho da janela disponível
+
+    // Ajusta o tamanho final da janela de acordo com o tamanho do array de pacotes
+    windowEnd = Math.min(windowStart + windowSize - 1, packets.length - 1);*/
 
 
 

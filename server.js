@@ -1,8 +1,9 @@
-const { port, server, timeout, timereset } = require('./config/const')
+const { port, server, timeout, windowSize } = require('./config/const')
 
 let expectedSeqNumber = 0;
 let timer;
 const receivedPackets = new Map(); // Mapa para armazenar pacotes recebidos
+let receiverWindowSize = windowSize; // Tamanho da janela disponível para o remetente
 
 /* Funções Auxiliares */
 
@@ -29,7 +30,7 @@ const resetTimer = () => {
 server.on('message', (message, rinfo) => {
     const packet = JSON.parse(message);
 
-    if (packet.id === expectedSeqNumber) {
+    if (packet.id === expectedSeqNumber && receiverWindowSize > 0) {
         console.log('Pacote recebido: ', packet);
         // Processar o pacote recebido
 
@@ -38,13 +39,14 @@ server.on('message', (message, rinfo) => {
 
         // Verificar se há pacotes subsequentes na sequência
         let nextSeqNumber = expectedSeqNumber + 1;
-        while (receivedPackets.has(nextSeqNumber)) {
+        while (receivedPackets.has(nextSeqNumber) && receiverWindowSize > 0) {
             const nextPacket = receivedPackets.get(nextSeqNumber);
             console.log('Pacote recebido: ', nextPacket);
             // Processar o pacote recebido
 
             receivedPackets.delete(nextSeqNumber);
             nextSeqNumber++;
+            receiverWindowSize--;
         }
 
         expectedSeqNumber = nextSeqNumber;
