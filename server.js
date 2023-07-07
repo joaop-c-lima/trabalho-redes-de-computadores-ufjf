@@ -25,42 +25,51 @@ const resetTimer = () => {
     }, timeout);
 };
 
+
 /* Eventos */
 
 server.on('message', (message, rinfo) => {
-    const packet = JSON.parse(message);
+    const randomNumb = Math.random();
 
-    if (packet.id === expectedSeqNumber && receiverWindowSize > 0) {
-        console.log('Pacote recebido: ', packet);
-        // Processar o pacote recebido
+    if (randomNumb < 0.50) {
+        const packet = JSON.parse(message);
 
-        // Armazenar o pacote recebido no mapa
-        receivedPackets.set(packet.id, packet);
-
-        // Verificar se há pacotes subsequentes na sequência
-        let nextSeqNumber = expectedSeqNumber + 1;
-        while (receivedPackets.has(nextSeqNumber) && receiverWindowSize > 0) {
-            const nextPacket = receivedPackets.get(nextSeqNumber);
-            console.log('Pacote recebido: ', nextPacket);
+        if (packet.id === expectedSeqNumber && receiverWindowSize > 0) {
+            console.log('Pacote recebido: ', packet);
             // Processar o pacote recebido
 
-            receivedPackets.delete(nextSeqNumber);
-            nextSeqNumber++;
-            receiverWindowSize--;
-        }
+            // Armazenar o pacote recebido no mapa
+            receivedPackets.set(packet.id, packet);
 
-        expectedSeqNumber = nextSeqNumber;
-    } else {
-        console.log('Pacote fora de ordem. Descartado.');
+            // Verificar se há pacotes subsequentes na sequência
+            let nextSeqNumber = expectedSeqNumber + 1;
+            while (receivedPackets.has(nextSeqNumber) && receiverWindowSize > 0) {
+                const nextPacket = receivedPackets.get(nextSeqNumber);
+                console.log('Pacote recebido: ', nextPacket);
+                // Processar o pacote recebido
+
+                receivedPackets.delete(nextSeqNumber);
+                nextSeqNumber++;
+                receiverWindowSize--;
+            }
+
+            expectedSeqNumber = nextSeqNumber;
+        } else {
+            console.log('Pacote fora de ordem. Descartado.');
+        }
     }
+
 
     //Devolve ack ao cliente com o num. do pacote que deve ser enviado
     const ackPacket = {
         ack: expectedSeqNumber - 1
     };
+
     const ackMessage = Buffer.from(JSON.stringify(ackPacket));
     send(ackMessage, rinfo);
     resetTimer();
+
+
 });
 
 server.bind(port, () => {

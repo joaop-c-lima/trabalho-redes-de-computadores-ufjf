@@ -25,7 +25,7 @@ function send(message) {
 
 // Função para retransmitir o pacote em caso de falha na entrega
 function generatePacketTimer(packet) {
-    return setTimeout(() => {
+    return setInterval(() => {
         if (packet.transmissions < maxRetransmissions && !packet.ackReceived) {
             packet.transmissions++;
             console.log(`Timeout. Reenviando pacote: ${packet.data}`);
@@ -34,6 +34,15 @@ function generatePacketTimer(packet) {
             console.log(`Limite de retransmissões atingido para o pacote: ${packet.data}`);
         }
     }, packetTimeout);
+}
+
+// recebe pacotes e envia x
+
+//Receber os pacotes
+function receivePackets(packets) {
+    packets.forEach(() => {
+        sendPacket(packets)
+    })
 }
 
 /* Funções: Principais */
