@@ -1,18 +1,20 @@
-const { TIMEOUT, LOREM_5_PARAGRAPHS, LOREM_20_PARAGRAPHS, DGRAM, PACKAGE_SIZE, SERVER_PORT, SERVER_HOST, CHANCE_OF_ERROR, WINDOW_LIMIT } = require('./constants');
+const fs = require("fs");
+const { TIMEOUT, LOREM_5_PARAGRAPHS, LOREM_10_MB, DGRAM, PACKAGE_SIZE, SERVER_PORT, SERVER_HOST, CHANCE_OF_ERROR, WINDOW_LIMIT } = require('./constants');
 
 const client = DGRAM.createSocket('udp4');
 let currentExpectedAck = 0;
-let subtexts = splitTextIntoSubtexts(LOREM_20_PARAGRAPHS);
+let subtexts = splitTextIntoSubtexts(LOREM_10_MB);
 let finalFlag = subtexts.length;
-let window = 1;
+let window = 10;
 let finalExpectedAck = -1;
 let packages;
+let log = "";
 
 client.on('message', (msg, rinfo) => {
     const ackPacket = JSON.parse(msg);
     if (currentExpectedAck === ackPacket.ack) {
         currentExpectedAck++
-    } else if (currentExpectedAck > ackPacket.ack) {
+    } else if (currentExpectedAck < ackPacket.ack) {
         currentExpectedAck = ackPacket.ack + 1;
     }
 });
@@ -20,24 +22,30 @@ client.on('message', (msg, rinfo) => {
 const intervalId = setInterval(() => {
     if (currentExpectedAck === finalFlag) {
         client.close();
+
+        fs.writeFile("./log.txt", log, err => {
+            if (err) {
+                console.error(err);
+            }
+            // file written successfully
+        });
         clearInterval(intervalId);
         return;
     }
     if (finalExpectedAck != -1) {
         if (currentExpectedAck === finalExpectedAck) {
-            process.stdout.write("Aumento aditivo: Before window: " + window);
             window++;
-            if(window > WINDOW_LIMIT){
+            if (window > WINDOW_LIMIT) {
                 window = WINDOW_LIMIT;
             }
         } else {
-            process.stdout.write("Decrecimento multiplicativo: Before window: " + window);
             window = Math.floor(window / 2);
-            if (window === 0) {
-                window++;
+            if (window < 10) {
+                window = 10
             }
         }
-        console.log(" -> After window: " + window + "\n\n");
+        console.log(window);
+        log += window + "\n"
     }
     finalExpectedAck = currentExpectedAck + window;
     packages = subtexts.slice(currentExpectedAck, finalExpectedAck);

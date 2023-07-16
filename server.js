@@ -9,13 +9,13 @@ server.on('message', (msg, rinfo) => {
         expectedAck++;
     }
     let request = JSON.stringify({
-        ack: expectedAck - 1
+        ack: (expectedAck - 1)
     });
     if (Math.random() < CHANCE_OF_ERROR) {
         server.send(request, rinfo.port, rinfo.address, (err) => {
             if (err) {
                 console.error('Erro ao enviar pacote: ', err);
-            } else console.log("Pacote enviado: ", request)
+            }
         })
     } else {
         console.log("Erro ao enviar pacote: " + JSON.parse(request).ack);

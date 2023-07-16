@@ -9,6 +9,7 @@ module.exports = Object.freeze({
     LOREM_10_PARAGRAPHS: fs.readFileSync("./lorem10paragraphs.txt", { encoding: 'utf8', flag: 'r' }),
     LOREM_20_PARAGRAPHS: fs.readFileSync("./lorem20paragraphs.txt",{ encoding: 'utf8', flag: 'r' }),
     LOREM_40_PARAGRAPHS: fs.readFileSync("./lorem40paragraphs.txt", { encoding: 'utf8', flag: 'r' }),
-    CHANCE_OF_ERROR: 0.7,
-    WINDOW_LIMIT: 4,
+    LOREM_10_MB: fs.readFileSync("./lorem10MB.txt", { encoding: 'utf8', flag: 'r' }),
+    CHANCE_OF_ERROR: 0.99,
+    WINDOW_LIMIT: 50,
 });
